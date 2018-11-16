@@ -43,6 +43,8 @@
 (receive (options args) (args:parse (command-line-arguments) opts)
   (with-backing-store (backing-store) (lambda ()
     (match args
+      (("ls")
+        (for-each print (list-registers)))
       (("keys" register-name region-name)
         (and-let* ((register (get-register register-name))
                   (records (register-records register (string->symbol region-name)))
