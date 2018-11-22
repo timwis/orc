@@ -30,16 +30,37 @@
         (with-input-from-file (conc name/filename ".rsf") (cut read-rsf base-name)))
       (else #f))))
 
+(define commands
+  '(("ls" "" "Print the names of Registers in this backing store.")
+    ("keys" "<REGISTER> <REGION>" "Print all the keys in this Register region.")
+    ("items" "<REGISTER> <REGION> <KEY>" "Print all the items for the given key.")
+    ("add-entry" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with new item blobs to the Register.")
+    ("digest" "<REGISTER>" "Print the root digest of the Register.")))
+
+(define commands-column-widths
+  (map
+    (compose add1 (cut apply max <>))
+    (map
+      (cut map string-length <>)
+      (call-with-values (cut unzip3 commands) list))))
+
 (define (usage)
   (with-output-to-port (current-error-port) (lambda ()
-    (print "Usage: " (car (argv)) "[OPTIONS...] COMMAND NAME [ARGS...]")
+    (print "Usage: " (car (argv)) " [OPTIONS...] COMMAND [ARGS...]")
     (newline)
-    (print (args:usage opts)))))
+    (args:width 26)
+    (print (args:usage opts))
+    (newline)
+    (print "Commands:")
+    (for-each (lambda (command)
+        (for-each display (map string-pad-right command commands-column-widths))
+        (newline))
+      commands))))
 
 (define backing-store (make-parameter (make-backing-store 'memory)))
 
 (define opts
-  (list (args:make-option (S store) (#:required "BACKING-STORE.SQLITE") "Read and write to BACKING-STORE.SQLITE instead of RSF files."
+  (list (args:make-option (S store) (#:required "BACKING-STORE") "Read and write to BACKING-STORE instead of RSF files."
           (backing-store (get-backing-store arg)))
         (args:make-option (? h help) #:none "Print help and exit."
           (usage)
