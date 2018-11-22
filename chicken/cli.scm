@@ -2,11 +2,14 @@
 (use matchable)
 (use string-utils)
 (use args)
+(use files)
 
 
 (define (make-backing-store filename)
   (let ((db (open-backing-store filename)))
     (with-backing-store db initialise-backing-store)
+    (when (not (equal? filename 'memory))
+      (fprintf (current-error-port) "Created new orc backing store at ~A\n" filename))
     db))
 
 (define (get-backing-store filename)
@@ -15,14 +18,16 @@
     (make-backing-store filename)))
 
 (define (get-register name/filename)
-  (let ((stored-register (open-register name/filename)))
+  (let* ((base-name (pathname-file name/filename))
+        (stored-register (open-register name/filename))
+        (stored-register (or stored-register (open-register base-name))))
     (cond
       (stored-register
         stored-register)
       ((file-exists? name/filename)
-        (with-input-from-file name/filename (cut read-rsf name/filename)))
+        (with-input-from-file name/filename (cut read-rsf base-name)))
       ((file-exists? (conc name/filename ".rsf"))
-        (with-input-from-file (conc name/filename ".rsf") (cut read-rsf name/filename)))
+        (with-input-from-file (conc name/filename ".rsf") (cut read-rsf base-name)))
       (else #f))))
 
 (define (usage)
@@ -44,7 +49,7 @@
   (with-backing-store (backing-store) (lambda ()
     (match args
       (("ls")
-        (for-each print (list-registers)))
+        (for-each print (map first (list-registers))))
       (("keys" register-name region-name)
         (and-let* ((register (get-register register-name))
                   (records (register-records register (string->symbol region-name)))
