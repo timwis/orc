@@ -2,8 +2,11 @@
 (use matchable)
 (use string-utils)
 (use args)
+(use srfi-19)
 (use files)
 
+; Always create dates in UTC
+(local-timezone-locale (utc-timezone-locale))
 
 (define (make-backing-store filename)
   (let ((db (open-backing-store filename)))
@@ -87,9 +90,9 @@
                     (region (string->symbol region-name))
                     (key (make-key key-name))
                     (items (map make-item item-blobs))
-                    (register (fold register-add-item register items))
-                    (entry (make-entry region key (current-date) items))
-                    (register (register-append-entry entry)))))
+                    (register (fold (flip register-add-item) register items))
+                    (entry (apply make-entry (append (list region key (time->date (current-time))) items)))
+                    (register (register-append-entry register entry)))))
       (("digest" register-name)
           (and-let* ((register (get-register register-name))
                     (digest (register-root-digest register))
