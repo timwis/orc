@@ -35,6 +35,7 @@
 
 (define commands
   '(("ls" "" "Print the names of Registers in this backing store.")
+    ("init" "<REGISTER>" "Create a new Register with the given name.")
     ("keys" "<REGISTER> <REGION>" "Print all the keys in this Register region.")
     ("items" "<REGISTER> <REGION> <KEY>" "Print all the items for the given key.")
     ("add-entry" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with new item blobs to the Register.")
@@ -74,6 +75,10 @@
     (match args
       (("ls")
         (for-each print (map first (list-registers))))
+      (("init" register-name)
+        (if (get-register register-name)
+          (fprintf (current-error-port) "Already a Register with the name ~A!\n" register-name)
+          (make-register register-name)))
       (("keys" register-name region-name)
         (and-let* ((register (get-register register-name))
                   (records (register-records register (string->symbol region-name)))
