@@ -1121,6 +1121,8 @@
 		     "CREATE UNIQUE INDEX \"registers-index-of-name\" ON \"registers\" (\"index-of\" ASC, \"name\" ASC);")
 		    ("CREATE TABLE \"orc-schema-version\" (\"version\" INTEGER PRIMARY KEY  NOT NULL );"
 		     "INSERT INTO \"orc-schema-version\" (\"version\") VALUES (2);"
+		     ;"DROP INDEX \"entrys-region-key-entry-number-log-id\";"
+		     ;"CREATE UNIQUE INDEX \"entrys-log-id-region-key-entry-number\" ON \"entrys\" ( \"log-id\" ASC, \"region\" ASC, \"key\" ASC, \"entry-number\" ASC);"
 		     )))
 	 (latest  (length schemas)))
 
