@@ -69,6 +69,7 @@
   ("init" "<REGISTER>" "Create a new Register with the given name.")
   ("ls" "<REGISTER> <REGION>" "Print all the entries in this Register region.")
   ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
+  ("relabel" "<REGISTER> <LABEL>" "Relabels the Register to be referred to by a new label.")
   ("log" "<REGISTER> <START-VERSION> <END-VERSION>" "Print all the entries modified between the two versions.")
   ("diff" "<REGISTER> <START-VERSION> <END-VERSION>" "Print the differences in entries between the two versions.")
   ("add-entry" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with new item blobs to the Register.")
@@ -152,6 +153,11 @@
       (("dump" register-name)
         (and-let* ((register (open-register register-name)))
           (with-output-to-port (current-output-port) (cut write-rsf register))))
+
+      (("relabel" old-name new-name)
+        (and-let* ((register (open-register old-name)))
+          (when (check-not-register new-name)
+            (assert (rename-register register new-name)))))
 
       (("ls" register-name region-name)
         (and-let* ((register (open-register register-name))
