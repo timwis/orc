@@ -74,6 +74,7 @@
   ("add-entry" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with new item blobs to the Register.")
   ("ensure-key" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with item blobs if the key is not present.")
   ("ensure-items" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with item blobs if any item is not present.")
+  ("dump" "<REGISTER>" "Print a full copy of the Register in RSF format.")
 ))
 
 (define (column-widths get-columns)
@@ -146,6 +147,10 @@
       (("init" register-name)
         (when (check-not-register register-name)
           (make-register register-name)))
+
+      (("dump" register-name)
+        (and-let* ((register (open-register register-name)))
+          (with-output-to-port (current-output-port) (cut write-rsf register))))
 
       (("ls" register-name region-name)
         (and-let* ((register (open-register register-name))
