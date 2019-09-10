@@ -51,6 +51,7 @@
 	 ; Registers
 	 make-register
 	 open-register
+	 rename-register
 	 list-registers
 	 register?
 	 register-version
@@ -176,6 +177,20 @@
     ;	should be in terms of region perhaps as system could use non-json or something?
 
     (create-register log-id version)))
+
+; Renames a given Register to use the new name
+(define-in-transaction (rename-register register new-name)
+
+  (assert (register? register)
+    (conc "rename-register: register argument must be a register! We got " register))
+
+  (assert new-name
+    (conc "rename-register: new-name argument must not be #f!"))
+
+  (let* ((result (register-store-rename! new-name (register-backing-store-ref register))))
+    (assert result
+      "Failed to rename the register.")
+    register))
 
 ; Create a register object from a reference to the backing store some version
 ; numbers.
@@ -1527,6 +1542,26 @@ END
 	(let ((log-id (last-insert-rowid (db-ctx))))
 	  (require-integer log-id))))))
 
+(define register-store-rename!
+  (let ((rename-register
+    (make-query
+      "UPDATE \"registers\" SET \"name\" = ?1 WHERE \"log-id\" = ?2"
+      `(,require-string ,require-integer) ; (name log-id)
+      `())))
+
+    (lambda-in-savepoint (new-name log-id)
+
+      (assert (string? new-name)
+        (conc "register-store-rename!: new-name argument must be a string! We got " new-name))
+
+      (assert log-id
+        (conc "register-store-rename!: log-id argument must be specified! We got " log-id))
+
+      (let ((rows-changed (run-exec (db-ctx) rename-register new-name log-id)))
+        (assert (= 1 rows-changed)
+          (conc "register-store-rename!: Expected 1 row to change when UPDATEing register name. We got " rows-changed))
+
+        #t))))
 
 ; Converts database result sets that describe a number of entries with one row
 ; per item per entry into entry objects.
