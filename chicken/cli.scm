@@ -71,6 +71,7 @@
   ("ls" "<REGISTER> <REGION> <KEY>" "Print all the entries with the given key.")
   ("log" "<REGISTER> <START-VERSION> <END-VERSION>" "Print all the entries modified between the two versions.")
   ("diff" "<REGISTER> <START-VERSION> <END-VERSION>" "Print the differences in entries between the two versions.")
+  ("add-entry" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with new item blobs to the Register.")
 ))
 
 (define (column-widths get-columns)
@@ -176,5 +177,13 @@
                                   (register-record-ref old-register (entry-region entry) (entry-key entry)))
                                   new-entries)))
         (for-each (diff-formatter (current-format)) old-entries new-entries)))
+
+      (("add-entry" register-name region-name key-name item-blobs ...)
+          (and-let* ((register (open-register register-name))
+                    (region (string->symbol region-name))
+                    (key (make-key key-name))
+                    (items (map make-item item-blobs))
+                    (entry (apply make-entry (append (list region key (time->date (current-time))) items)))
+                    (register (register-append-entry register entry)))))
 
       (_ (usage))))))
