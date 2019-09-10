@@ -75,6 +75,7 @@
   ("ensure-key" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with item blobs if the key is not present.")
   ("ensure-items" "<REGISTER> <REGION> <KEY> [<ITEM-BLOB> ...]" "Add a new entry with item blobs if any item is not present.")
   ("dump" "<REGISTER>" "Print a full copy of the Register in RSF format.")
+  ("digest" "<REGISTER>" "Print the root digest of the Register.")
 ))
 
 (define (column-widths get-columns)
@@ -218,5 +219,11 @@
                      (entry (apply make-entry (append (list region key (time->date (current-time))) items)))
                      (register (register-append-entry register entry)))
                 ((entry-formatter (current-format)) entry))))))
+
+      (("digest" register-name)
+          (and-let* ((register (open-register register-name))
+                    (digest (register-root-digest register))
+                    (hex (string->hex (blob->string digest))))
+            (print hex)))
 
       (_ (usage))))))
